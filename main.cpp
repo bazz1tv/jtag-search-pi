@@ -1,8 +1,9 @@
 /*
- * JTAG pinout detector
+ * JTAG pinout detector for Raspberry Pi
  * Version 0.1
- * 2010-07-15
+ * 11/27/2015
  *
+ * Copyright (c) 2015 Michael Bazzinotti (Bazz)
  * Copyright (c) 2010 Igor Skochinsky
  *
  * This software is provided 'as-is', without any express or implied
@@ -39,9 +40,56 @@
  Current algorithm assumes chain length of 1
  
 */
+#include <stdio.h>
+#include <stdlib.h>
+#include <wiringPi.h>
 
-#include "mbed.h"
+struct DigitalInOut
+{
+  DigitalInOut()
+  {
+    pin = count++;
+  }
 
+  int read()
+  {
+    return digitalRead(pin);
+  }
+
+  void write(int val)
+  {
+    digitalWrite(pin, val);
+  }
+
+  void output()
+  {
+    pinMode(pin, OUTPUT);
+  }
+
+  void input()
+  {
+    pinMode(pin, INPUT);
+  }
+
+  void pullUp()
+  {
+    pullUpDnControl(pin, PUD_UP);
+  }
+  void pullDown()
+  {
+    pullUpDnControl(pin, PUD_DOWN);
+  }
+  void pullOff()
+  {
+    pullUpDnControl(pin, PUD_OFF);
+  }
+
+  int pin;
+
+  static int count;
+};
+
+int DigitalInOut::count=0;
 
 // pin description structure
 struct PinInfo
@@ -50,13 +98,15 @@ struct PinInfo
   const char *name;
 };
 
+//DigitalInOut p[5];
 // define the pins to use for bruteforcing
 PinInfo g_pins[] = { 
-    {p21, "pin 21", },
-    {p22, "pin 22", },
-    {p23, "pin 23", },
-    {p24, "pin 24", },
-    {p25, "pin 25", },
+    {DigitalInOut(), "gpio 0", },
+    {DigitalInOut(), "gpio 1", },
+    {DigitalInOut(), "gpio 2", },
+    {DigitalInOut(), "gpio 3", },
+    {DigitalInOut(), "gpio 4", },
+    {DigitalInOut(), "gpio 5", },
 };
 
 #define NPINS sizeof(g_pins)/sizeof(g_pins[0])
@@ -83,6 +133,7 @@ inline void printpins()
 inline void setpin(int pinno, int value)
 {
   g_pins[pinno].pin.write(value != 0);
+  delayMicroseconds(500);
 }
 
 // read pin with a given index
@@ -95,17 +146,20 @@ inline int getpin(int pinno)
 inline void makeoutput(int pinno)
 {
   g_pins[pinno].pin.output();
+  g_pins[pinno].pin.pullOff();
 }
 
 // make a pin input pin
 inline void makeinput(int pinno)
 {
   g_pins[pinno].pin.input();
+  g_pins[pinno].pin.pullUp();
 }
 
 // init all pins as inputs
 void InitGPIO()
 {
+  wiringPiSetup();
   for (int i=0; i<NPINS; i++)
     makeinput(i);
 }
@@ -190,7 +244,8 @@ void try_tdi(int tdi)
   {
     printf("Success! Final pinout:\n");
     printpins();
-    exit_on_button("Found!");
+    //exit_on_button("Found!");
+    exit(0);
   }
   else if (output!=0 && output!=0xFFFFFFFF)
   {
@@ -307,7 +362,10 @@ void combinations(int v[], int start, int n, int k, int maxk)
 int main()
 {
     int v[NPINS];
+
+    printf ("count == %d\n", DigitalInOut::count);
     InitGPIO();
+
     // try all combinations of 2 pins
     combinations (v, 0, NPINS, 0, 2);
 }
