@@ -7,7 +7,11 @@ This is an adaption of Igor Skochinsky's JTAG_Search for mbed to the Raspberry P
 I made a simple Pi-implementation mbed wrapper for DigitalInOut and Bam! (like Chef Emeril Lagasse). That's a spicy meatball.
 
 ## How to Compile
-wiringPi library must be installed. This can easily be installed from Raspbian: `sudo apt-get install wiringpi`
+wiringPi library must be installed. This can easily be installed from Raspbian: 
+`sudo apt-get install wiringpi`
+
+then, simply compile by doing
+`make`
 
 ## How to Use
 
