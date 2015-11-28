@@ -21,4 +21,4 @@ When you're ready to run the application. As an example, let's say you're checki
 
 It's that simple.
 
-There's a default pre-programmed delay of half-millisecond from any GPIO write operation. If you want to experiment with other values (in microseconds), use -t.
+There's a default pre-programmed delay of half-millisecond (500 uS) from any GPIO write operation. If you want to experiment with other values (in microseconds), use -t.
