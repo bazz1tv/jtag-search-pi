@@ -1,0 +1,5 @@
+11/27/2015 | BAZZ
+-----------
+
+Support for Raspberry Pi
+Dynamic Pin specification (-n numpins)

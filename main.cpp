@@ -50,7 +50,7 @@
 void print_usage(char **argv)
 {
     printf("usage\n");
-    printf("%s [-n #pins]\n", argv[0]);
+    printf("%s -n #pins [-t delayUs]\n", argv[0]);
 }
 
 struct DigitalInOut
@@ -109,7 +109,8 @@ struct PinInfo
 
 // define the pins to use for bruteforcing
 PinInfo *g_pins;    // populated in main()
-int NPINS = 0;      // defined via command line
+int NPINS = 0;      // defined via command line (-n)
+unsigned int delayus = 500; // can be defined via command line (-t)
 
 // indexes of found pins
 int pin_TCK = -1;
@@ -133,7 +134,7 @@ inline void printpins()
 inline void setpin(int pinno, int value)
 {
   g_pins[pinno].pin.write(value != 0);
-  delayMicroseconds(500);
+  delayMicroseconds(delayus);
 }
 
 // read pin with a given index
@@ -363,11 +364,14 @@ int main(int argc, char **argv)
 {
     int c, index;
     opterr = 0;
-    while ((c = getopt (argc, argv, "n:")) != -1)
+    while ((c = getopt (argc, argv, "n:t:")) != -1)
         switch (c)
         {
             case 'n':
                 NPINS = atoi(optarg);
+                break;
+            case 't':
+                delayus = atoi(optarg);
                 break;
             case '?':
                 if (optopt == 'c')
@@ -392,7 +396,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    printf ("NPINS = %d\n", NPINS);
+    printf ("NPINS = %d, delayus = %d uS\n", NPINS, delayus);
 
     g_pins = (PinInfo *) malloc(sizeof(PinInfo) * NPINS);
 
