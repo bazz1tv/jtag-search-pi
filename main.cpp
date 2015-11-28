@@ -42,7 +42,16 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <ctype.h>
 #include <wiringPi.h>
+#include <string.h>
+
+void print_usage(char **argv)
+{
+    printf("usage\n");
+    printf("%s [-n #pins]\n", argv[0]);
+}
 
 struct DigitalInOut
 {
@@ -95,21 +104,12 @@ int DigitalInOut::count=0;
 struct PinInfo
 {
   DigitalInOut pin;
-  const char *name;
+  char *name;
 };
 
-//DigitalInOut p[5];
 // define the pins to use for bruteforcing
-PinInfo g_pins[] = { 
-    {DigitalInOut(), "gpio 0", },
-    {DigitalInOut(), "gpio 1", },
-    {DigitalInOut(), "gpio 2", },
-    {DigitalInOut(), "gpio 3", },
-    {DigitalInOut(), "gpio 4", },
-    {DigitalInOut(), "gpio 5", },
-};
-
-#define NPINS sizeof(g_pins)/sizeof(g_pins[0])
+PinInfo *g_pins;    // populated in main()
+int NPINS = 0;      // defined via command line
 
 // indexes of found pins
 int pin_TCK = -1;
@@ -359,13 +359,65 @@ void combinations(int v[], int start, int n, int k, int maxk)
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    int v[NPINS];
+    int c, index;
+    opterr = 0;
+    while ((c = getopt (argc, argv, "n:")) != -1)
+        switch (c)
+        {
+            case 'n':
+                NPINS = atoi(optarg);
+                break;
+            case '?':
+                if (optopt == 'c')
+                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+                else if (isprint (optopt))
+                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+                else
+                    fprintf (stderr,
+                            "Unknown option character `\\x%x'.\n",
+                            optopt);
+                return 1;
+            default:
+                abort ();
+        }
+
+    for (index = optind; index < argc; index++)
+        printf ("Non-option argument %s\n", argv[index]);
+
+    if (NPINS == 0)
+    {
+        print_usage(argv);
+        exit(1);
+    }
+
+    printf ("NPINS = %d\n", NPINS);
+
+    g_pins = (PinInfo *) malloc(sizeof(PinInfo) * NPINS);
+
+    for (int i=0; i < NPINS; i++)
+    {
+        char gpio_str[25];
+        sprintf(gpio_str, "gpio %d", i);
+        char *str = (char *) malloc ((strlen(gpio_str) + 1) * sizeof(char));
+        strcpy(str, gpio_str);
+        g_pins[i] = {DigitalInOut(), str};
+
+        printf("%s\n", str);
+    }
+
+    int *v = (int *) malloc (sizeof(int) * NPINS);
 
     printf ("count == %d\n", DigitalInOut::count);
     InitGPIO();
 
     // try all combinations of 2 pins
     combinations (v, 0, NPINS, 0, 2);
+
+    for (int i=0; i < NPINS; i++)
+    {
+        free(g_pins[i].name);
+    }
+    free(v);
 }
