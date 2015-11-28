@@ -1,2 +1,2 @@
-jtag-find: main.cpp
-	g++ -o jtag-find main.cpp -lwiringPi
+jtag-search: main.cpp
+	g++ -o jtag-search main.cpp -lwiringPi
